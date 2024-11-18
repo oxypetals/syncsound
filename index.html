@@ -3,42 +3,118 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Real-Time MP3 Player</title>
+  <title>Shared Playlist</title>
   <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .playlist {
+      margin-top: 20px;
+    }
+    .playlist-item {
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin-bottom: 5px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <h1>Real-Time MP3 Player</h1>
+  <h1>Shared Playlist App</h1>
+  
   <form id="uploadForm">
     <input type="file" id="mp3File" accept="audio/mpeg" />
     <button type="submit">Upload</button>
   </form>
+
+  <div class="playlist">
+    <h2>Playlist</h2>
+    <div id="playlistContainer"></div>
+  </div>
+
   <audio id="audioPlayer" controls autoplay></audio>
+  <button id="nextButton">Next Track</button>
 
   <script>
-    const form = document.getElementById('uploadForm');
+    const socket = io('https://epub-modifier.onrender.com');
+    const playlistContainer = document.getElementById('playlistContainer');
     const audioPlayer = document.getElementById('audioPlayer');
-    const socket = io('http://localhost:5000');
+    const nextButton = document.getElementById('nextButton');
 
     // Upload MP3 File
-    form.addEventListener('submit', async (e) => {
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const file = document.getElementById('mp3File').files[0];
-      if (!file) return alert('Please select an MP3 file');
+      if (!file) {
+        alert('Please select an MP3 file');
+        return;
+      }
 
       const formData = new FormData();
       formData.append('file', file);
 
-      await fetch('/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      try {
+        const response = await fetch('https://epub-modifier.onrender.com/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        if (response.ok) {
+          console.log('File uploaded successfully');
+        } else {
+          const error = await response.json();
+          console.error('Upload failed:', error);
+          alert('Failed to upload file');
+        }
+      } catch (error) {
+        console.error('Error uploading file:', error);
+      }
     });
 
-    // Receive Notification and Start Streaming
-    socket.on('new_track', () => {
-      audioPlayer.src = '/stream';
-      audioPlayer.play();
+    // Update Playlist
+    socket.on('playlist_updated', (playlist) => {
+      console.log('Updated playlist:', playlist);
+      displayPlaylist(playlist);
     });
+
+    // Play Track
+    socket.on('track_changed', (track) => {
+      if (track) {
+        console.log('Now playing:', track.title);
+        audioPlayer.src = 'https://epub-modifier.onrender.com/stream';
+        audioPlayer.play();
+      } else {
+        console.log('No track is currently playing.');
+        audioPlayer.pause();
+        audioPlayer.src = '';
+      }
+    });
+
+    // Skip to Next Track
+    nextButton.addEventListener('click', () => {
+      socket.emit('play_next');
+    });
+
+    // Display Playlist
+    function displayPlaylist(playlist) {
+      playlistContainer.innerHTML = '';
+      playlist.forEach((track, index) => {
+        const div = document.createElement('div');
+        div.className = 'playlist-item';
+        div.textContent = `${index + 1}. ${track.title}`;
+        playlistContainer.appendChild(div);
+      });
+    }
   </script>
 </body>
 </html>
