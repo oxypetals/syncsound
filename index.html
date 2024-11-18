@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time MP3 Player</title>
+  <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Real-Time MP3 Player</h1>
+  <form id="uploadForm">
+    <input type="file" id="mp3File" accept="audio/mpeg" />
+    <button type="submit">Upload</button>
+  </form>
+  <audio id="audioPlayer" controls autoplay></audio>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const socket = io('http://localhost:5000');
+
+    // Upload MP3 File
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = document.getElementById('mp3File').files[0];
+      if (!file) return alert('Please select an MP3 file');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      await fetch('/upload', {
+        method: 'POST',
+        body: formData,
+      });
+    });
+
+    // Receive Notification and Start Streaming
+    socket.on('new_track', () => {
+      audioPlayer.src = '/stream';
+      audioPlayer.play();
+    });
+  </script>
+</body>
+</html>
