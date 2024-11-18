@@ -18,6 +18,8 @@ flask==3.1.0
     #   flask-socketio
 flask-socketio==5.4.1
     # via -r requirements.in
+gunicorn==23.0.0
+    # via -r requirements.in
 h11==0.14.0
     # via wsproto
 itsdangerous==2.2.0
@@ -28,6 +30,8 @@ markupsafe==3.0.2
     # via
     #   jinja2
     #   werkzeug
+packaging==24.2
+    # via gunicorn
 python-engineio==4.8.2
     # via python-socketio
 python-socketio==5.7.2
