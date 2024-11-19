@@ -3,6 +3,7 @@ from botocore.exceptions import NoCredentialsError
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
 from flask_cors import CORS
+from flask import send_file
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -28,7 +29,7 @@ playlist = []
 
 @app.route('/')
 def index():
-    # Serve the frontend HTML file
+    """Serve the HTML file."""
     return send_file('index.html')
 
 @app.route('/upload', methods=['POST'])
