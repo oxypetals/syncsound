@@ -28,8 +28,8 @@ playlist = []
 
 @app.route('/')
 def index():
-    """Root route."""
-    return jsonify({"message": "Welcome to the Shared Playlist App!"})
+    # Serve the frontend HTML file
+    return send_file('index.html')
 
 @app.route('/upload', methods=['POST'])
 def upload():
