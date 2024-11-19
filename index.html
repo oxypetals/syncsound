@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shared Playlist</title>
+  <title>Shared Playlist App</title>
   <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
   <style>
     body {
@@ -32,7 +32,7 @@
 </head>
 <body>
   <h1>Shared Playlist App</h1>
-  
+
   <form id="uploadForm">
     <input type="file" id="mp3File" accept="audio/mpeg" />
     <button type="submit">Upload</button>
@@ -47,12 +47,12 @@
   <button id="nextButton">Next Track</button>
 
   <script>
-    const socket = io('https://epub-modifier.onrender.com');
+    const socket = io('https://epub-modifier.onrender.com'); // Update to your deployed URL
     const playlistContainer = document.getElementById('playlistContainer');
     const audioPlayer = document.getElementById('audioPlayer');
     const nextButton = document.getElementById('nextButton');
 
-    // Upload MP3 File
+    // Handle MP3 file upload
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const file = document.getElementById('mp3File').files[0];
@@ -69,29 +69,30 @@
           method: 'POST',
           body: formData,
         });
+
         if (response.ok) {
-          console.log('File uploaded successfully');
+          const data = await response.json();
+          console.log('File uploaded successfully:', data);
         } else {
           const error = await response.json();
           console.error('Upload failed:', error);
-          alert('Failed to upload file');
         }
       } catch (error) {
         console.error('Error uploading file:', error);
       }
     });
 
-    // Update Playlist
+    // Update playlist
     socket.on('playlist_updated', (playlist) => {
       console.log('Updated playlist:', playlist);
       displayPlaylist(playlist);
     });
 
-    // Play Track
+    // Play track
     socket.on('track_changed', (track) => {
       if (track) {
         console.log('Now playing:', track.title);
-        audioPlayer.src = 'https://epub-modifier.onrender.com/stream';
+        audioPlayer.src = track.url;
         audioPlayer.play();
       } else {
         console.log('No track is currently playing.');
@@ -100,12 +101,12 @@
       }
     });
 
-    // Skip to Next Track
+    // Skip to next track
     nextButton.addEventListener('click', () => {
       socket.emit('play_next');
     });
 
-    // Display Playlist
+    // Display playlist
     function displayPlaylist(playlist) {
       playlistContainer.innerHTML = '';
       playlist.forEach((track, index) => {
